@@ -48,8 +48,9 @@ open build/ClaudeStrip.app
 ## Requirements
 
 - macOS 13+ (Ventura or later)
-- A MacBook Pro with a Touch Bar
-- Swift 5.9+ (Xcode or Command Line Tools)
+- A MacBook Pro with a Touch Bar for the Control Strip display (other Macs get
+  the menubar readout only)
+- Swift 5.9+ (Xcode or Command Line Tools) — only needed to build from source
 
 ## Uninstall
 
@@ -58,6 +59,14 @@ From source: `./uninstall.sh`
 
 ## Notes & limitations
 
+- **macOS 26 (Tahoe) Touch Bar bug:** Tahoe ships with a known Apple bug that
+  blanks the Touch Bar (it stays dark while still responding to touch) on both
+  Intel and Apple Silicon Touch Bar Macs. This is **not** caused by ClaudeStrip
+  — no app can draw to a Touch Bar in this state. If your bar is dark, try
+  ` → Restart`, or quit `TouchBarServer` in Activity Monitor and restart.
+  ClaudeStrip's menubar readout still works regardless.
+- **Non–Touch Bar Macs:** the usage still shows in the **menubar**; the Control
+  Strip item simply doesn't appear.
 - Uses **private/undocumented APIs** for the Control Strip — not App Store
   eligible, and a future macOS could break it. If registration fails, the
   value still shows in the menubar.
