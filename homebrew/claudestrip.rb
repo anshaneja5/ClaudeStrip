@@ -1,6 +1,6 @@
 cask "claudestrip" do
   version "0.1.0"
-  sha256 :no_check
+  sha256 "950228e90a2dfd37ec300e3afafa9f0fdef9fafed2fa960f17a597603c962f35"
 
   url "https://github.com/anshaneja5/ClaudeStrip/releases/download/v#{version}/ClaudeStrip.zip"
   name "ClaudeStrip"
@@ -14,6 +14,12 @@ cask "claudestrip" do
   postflight do
     system_command "/usr/bin/xattr", args: ["-cr", "#{appdir}/ClaudeStrip.app"]
     system_command "#{appdir}/ClaudeStrip.app/Contents/Resources/post-install.sh"
+  end
+
+  preflight do
+    # Run the bundled uninstaller (removes LaunchAgent) before the app is deleted.
+    uninstall_script = "#{appdir}/ClaudeStrip.app/Contents/Resources/uninstall.sh"
+    system_command uninstall_script if File.exist?(uninstall_script)
   end
 
   uninstall launchctl: "app.claudestrip",
