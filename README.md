@@ -29,7 +29,7 @@ provides Quit.
 ### Homebrew
 
 ```bash
-brew install --cask YOUR_GH_USER/tap/claudestrip
+brew install --cask anshaneja5/tap/claudestrip
 ```
 
 > Gatekeeper (unsigned app): if macOS blocks first launch, run
@@ -38,7 +38,7 @@ brew install --cask YOUR_GH_USER/tap/claudestrip
 ### From source
 
 ```bash
-git clone https://github.com/YOUR_GH_USER/ClaudeStrip.git
+git clone https://github.com/anshaneja5/ClaudeStrip.git
 cd ClaudeStrip
 ./run-tests.sh     # run unit tests (via swiftc — no SwiftPM needed)
 ./build-app.sh     # produces build/ClaudeStrip.app

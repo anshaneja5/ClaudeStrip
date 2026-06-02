@@ -16,6 +16,7 @@ final class ControlStripController {
     }
 
     func register() {
+        NSLog("[ClaudeStrip] register() begin")
         DFRSystemModalShowsCloseBoxWhenFrontMost(true)
 
         button.bezelStyle = .rounded
@@ -31,6 +32,7 @@ final class ControlStripController {
         DFRElementSetControlStripPresenceForIdentifier(
             ControlStripController.identifier.rawValue, true
         )
+        NSLog("[ClaudeStrip] register() done — item added to control strip")
     }
 
     func updateLabel(_ text: String) {
