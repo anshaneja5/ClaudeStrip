@@ -7,6 +7,8 @@ struct StatsView: View {
 
     private var last7: [AnalyticsDailyStats] { Array(store.dailyStats.suffix(7)) }
 
+    private var allTimeCost: Double { store.sessions.reduce(0) { $0 + $1.costUSD } }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             header
@@ -33,11 +35,12 @@ struct StatsView: View {
     }
 
     private var todayCard: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("TODAY").font(.caption2.bold()).foregroundStyle(.secondary)
-            Text(store.todayStats?.formattedCost ?? "$0.00")
-                .font(.system(size: 38, weight: .bold, design: .rounded))
-                .monospacedDigit()
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .top, spacing: 28) {
+                costColumn("TODAY", store.todayStats?.totalCostUSD ?? 0)
+                costColumn("ALL TIME", allTimeCost)
+                Spacer()
+            }
             HStack(spacing: 18) {
                 stat("Tokens", Metric.formatTokens(store.todayStats?.totalTokens ?? 0))
                 stat("Messages", "\(store.todayStats?.messageCount ?? 0)")
@@ -47,6 +50,17 @@ struct StatsView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(14)
         .background(RoundedRectangle(cornerRadius: 12).fill(Color.secondary.opacity(0.08)))
+    }
+
+    private func costColumn(_ label: String, _ value: Double) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(label).font(.caption2.bold()).foregroundStyle(.secondary)
+            Text(String(format: "$%.2f", value))
+                .font(.system(size: 28, weight: .bold, design: .rounded))
+                .monospacedDigit()
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
+        }
     }
 
     private func stat(_ label: String, _ value: String) -> some View {
