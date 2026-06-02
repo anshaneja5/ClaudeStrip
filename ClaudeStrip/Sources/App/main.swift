@@ -23,10 +23,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             button.action = #selector(togglePopover)
         }
 
-        // The big, beautiful dashboard popover.
+        // The big, beautiful dashboard popover. sizingOptions makes the popover
+        // grow to the SwiftUI content's full height (otherwise the top clips).
         popover = NSPopover()
         popover.behavior = .transient
-        popover.contentViewController = NSHostingController(rootView: StatsView())
+        let hosting = NSHostingController(rootView: StatsView())
+        hosting.sizingOptions = .preferredContentSize
+        popover.contentViewController = hosting
 
         // Touch Bar Control Strip item.
         strip = ControlStripController(onTap: { [weak self] in self?.cycle() })
