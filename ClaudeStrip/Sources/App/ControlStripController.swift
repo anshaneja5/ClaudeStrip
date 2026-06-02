@@ -22,7 +22,9 @@ final class ControlStripController {
         button.bezelStyle = .rounded
         button.target = self
         button.action = #selector(handleTap)
-        button.font = .monospacedDigitSystemFont(ofSize: 14, weight: .medium)
+        // Larger, bolder, monospaced digits so it's legible in the narrow strip.
+        button.font = .monospacedDigitSystemFont(ofSize: 16, weight: .semibold)
+        button.sizeToFit()
 
         let newItem = NSCustomTouchBarItem(identifier: ControlStripController.identifier)
         newItem.view = button
@@ -37,6 +39,8 @@ final class ControlStripController {
 
     func updateLabel(_ text: String) {
         button.title = text
+        // Resize the item to fit the new text so longer metrics aren't clipped.
+        button.sizeToFit()
     }
 
     @objc private func handleTap() {
