@@ -17,6 +17,8 @@ COMMON_FLAGS=(
   -import-objc-header "$BRIDGE"
   -F /System/Library/PrivateFrameworks -framework DFRFoundation
   -framework Cocoa
+  -framework SwiftUI
+  -framework Charts
   -swift-version 5
   -O
 )

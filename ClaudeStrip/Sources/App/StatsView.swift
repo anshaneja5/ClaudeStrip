@@ -1,0 +1,146 @@
+import SwiftUI
+import Charts
+
+/// The menubar dashboard shown in a popover. Binds live to ClaudeAnalyticsStore.
+struct StatsView: View {
+    @ObservedObject var store = ClaudeAnalyticsStore.shared
+
+    private var last7: [AnalyticsDailyStats] { Array(store.dailyStats.suffix(7)) }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            header
+            todayCard
+            limitsSection
+            chartSection
+            Divider()
+            footer
+        }
+        .padding(18)
+        .frame(width: 340)
+    }
+
+    private var header: some View {
+        HStack(spacing: 10) {
+            Image(nsImage: ClaudeLogo.nsImage(size: 30))
+            VStack(alignment: .leading, spacing: 1) {
+                Text("ClaudeStrip").font(.headline)
+                Text("Claude Code usage · 100% local")
+                    .font(.caption2).foregroundStyle(.secondary)
+            }
+            Spacer()
+        }
+    }
+
+    private var todayCard: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("TODAY").font(.caption2.bold()).foregroundStyle(.secondary)
+            Text(store.todayStats?.formattedCost ?? "$0.00")
+                .font(.system(size: 38, weight: .bold, design: .rounded))
+                .monospacedDigit()
+            HStack(spacing: 18) {
+                stat("Tokens", Metric.formatTokens(store.todayStats?.totalTokens ?? 0))
+                stat("Messages", "\(store.todayStats?.messageCount ?? 0)")
+                stat("Sessions", "\(store.todayStats?.sessionCount ?? 0)")
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(14)
+        .background(RoundedRectangle(cornerRadius: 12).fill(Color.secondary.opacity(0.08)))
+    }
+
+    private func stat(_ label: String, _ value: String) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(value).font(.callout.bold().monospacedDigit())
+            Text(label).font(.caption2).foregroundStyle(.secondary)
+        }
+    }
+
+    private var limitsSection: some View {
+        VStack(spacing: 12) {
+            LimitBar(label: "5-hour limit",
+                     pct: store.usageLimits?.fiveHourPercent,
+                     resets: store.usageLimits?.fiveHourTimeRemaining)
+            LimitBar(label: "7-day limit",
+                     pct: store.usageLimits?.sevenDayPercent,
+                     resets: store.usageLimits?.sevenDayTimeRemaining)
+        }
+    }
+
+    private var chartSection: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("LAST 7 DAYS").font(.caption2.bold()).foregroundStyle(.secondary)
+            if last7.isEmpty {
+                Text("No data yet")
+                    .font(.caption).foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, minHeight: 90)
+            } else {
+                Chart(last7) { day in
+                    BarMark(
+                        x: .value("Day", Self.weekday(day.date)),
+                        y: .value("Cost", day.totalCostUSD)
+                    )
+                    .foregroundStyle(Color(nsColor: ClaudeLogo.coral))
+                    .cornerRadius(3)
+                }
+                .frame(height: 90)
+            }
+        }
+    }
+
+    private var footer: some View {
+        HStack {
+            if let sync = store.lastSyncDate {
+                Text("updated \(Self.clock(sync))")
+                    .font(.caption2).foregroundStyle(.secondary)
+            }
+            Spacer()
+            Button("Quit") { NSApplication.shared.terminate(nil) }
+                .controlSize(.small)
+        }
+    }
+
+    private static func weekday(_ d: Date) -> String {
+        let f = DateFormatter(); f.dateFormat = "EEE"; return f.string(from: d)
+    }
+
+    private static func clock(_ d: Date) -> String {
+        let f = DateFormatter(); f.timeStyle = .short; return f.string(from: d)
+    }
+}
+
+/// A labeled usage-limit progress bar, color-coded by how close to the cap.
+private struct LimitBar: View {
+    let label: String
+    let pct: Double?
+    let resets: String?
+
+    private var fraction: CGFloat { CGFloat(min((pct ?? 0) / 100, 1)) }
+    private var barColor: Color {
+        let p = pct ?? 0
+        if p >= 90 { return .red }
+        if p >= 70 { return .orange }
+        return Color(nsColor: ClaudeLogo.coral)
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Text(label).font(.caption).foregroundStyle(.secondary)
+                Spacer()
+                Text(pct != nil ? "\(Int(pct!.rounded()))%" : "—")
+                    .font(.caption.monospacedDigit()).bold()
+            }
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    Capsule().fill(Color.secondary.opacity(0.18))
+                    Capsule().fill(barColor).frame(width: geo.size.width * fraction)
+                }
+            }
+            .frame(height: 6)
+            if let resets {
+                Text("resets in \(resets)").font(.caption2).foregroundStyle(.tertiary)
+            }
+        }
+    }
+}

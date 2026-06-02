@@ -1,4 +1,5 @@
 import AppKit
+import SwiftUI
 import Combine
 
 @MainActor
@@ -7,21 +8,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var cancellables = Set<AnyCancellable>()
     private var strip: ControlStripController!
     private var statusItem: NSStatusItem!
+    private var popover: NSPopover!
     private var metric: Metric = .cost
     private var snapshot: UsageSnapshot = .empty
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        // Menubar fallback: always shows the current value and provides Quit.
+        // Menubar item: Claude logo + current value; click opens the dashboard.
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        statusItem.button?.title = "…"
-        let menu = NSMenu()
-        let cycleItem = NSMenuItem(title: "Cycle metric", action: #selector(cycle), keyEquivalent: "")
-        cycleItem.target = self
-        menu.addItem(cycleItem)
-        menu.addItem(.separator())
-        menu.addItem(NSMenuItem(title: "Quit ClaudeStrip",
-                                action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
-        statusItem.menu = menu
+        if let button = statusItem.button {
+            button.image = ClaudeLogo.nsImage(size: 15)
+            button.imagePosition = .imageLeading
+            button.title = "…"
+            button.target = self
+            button.action = #selector(togglePopover)
+        }
+
+        // The big, beautiful dashboard popover.
+        popover = NSPopover()
+        popover.behavior = .transient
+        popover.contentViewController = NSHostingController(rootView: StatsView())
 
         // Touch Bar Control Strip item.
         strip = ControlStripController(onTap: { [weak self] in self?.cycle() })
@@ -62,6 +67,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc private func cycle() {
         metric = metric.next
         render()
+    }
+
+    @objc private func togglePopover() {
+        guard let button = statusItem.button else { return }
+        if popover.isShown {
+            popover.performClose(nil)
+        } else {
+            popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+            popover.contentViewController?.view.window?.makeKey()
+        }
     }
 
     private func render() {

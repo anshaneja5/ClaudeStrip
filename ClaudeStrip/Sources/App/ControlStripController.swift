@@ -22,8 +22,12 @@ final class ControlStripController {
         button.bezelStyle = .rounded
         button.target = self
         button.action = #selector(handleTap)
-        // Larger, bolder, monospaced digits so it's legible in the narrow strip.
-        button.font = .monospacedDigitSystemFont(ofSize: 16, weight: .semibold)
+        // Large, bold, monospaced digits so it's clearly legible on the strip.
+        button.font = .monospacedDigitSystemFont(ofSize: 24, weight: .semibold)
+        // Claude logo before the text.
+        button.image = ClaudeLogo.nsImage(size: 22)
+        button.imagePosition = .imageLeading
+        button.imageHugsTitle = true
         button.sizeToFit()
 
         let newItem = NSCustomTouchBarItem(identifier: ControlStripController.identifier)

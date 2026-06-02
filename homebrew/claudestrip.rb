@@ -1,6 +1,6 @@
 cask "claudestrip" do
-  version "0.1.1"
-  sha256 "c3d81451e8017669ad423e25a733ca8b95fe1b9af8141f225b7f800d545498fa"
+  version "0.2.0"
+  sha256 "4744a8520deecdf126b9363a8681e3796fa0d10e8c65b1e2b0398cbfa15263bb"
 
   url "https://github.com/anshaneja5/ClaudeStrip/releases/download/v#{version}/ClaudeStrip.zip"
   name "ClaudeStrip"
