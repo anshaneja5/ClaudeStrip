@@ -8,6 +8,14 @@ struct StatsView: View {
     private var last7: [AnalyticsDailyStats] { Array(store.dailyStats.suffix(7)) }
 
     private var allTimeCost: Double { store.sessions.reduce(0) { $0 + $1.costUSD } }
+    private var allTimeTokens: Int { store.sessions.reduce(0) { $0 + $1.totalTokens } }
+    private var allTimeMessages: Int { store.sessions.reduce(0) { $0 + $1.messageCount } }
+    private var allTimeSessions: Int { store.sessions.count }
+
+    private func grouped(_ n: Int) -> String {
+        let f = NumberFormatter(); f.numberStyle = .decimal
+        return f.string(from: NSNumber(value: n)) ?? "\(n)"
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -35,16 +43,27 @@ struct StatsView: View {
     }
 
     private var todayCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 14) {
             HStack(alignment: .top, spacing: 28) {
                 costColumn("TODAY", store.todayStats?.totalCostUSD ?? 0)
                 costColumn("ALL TIME", allTimeCost)
                 Spacer()
             }
-            HStack(spacing: 18) {
-                stat("Tokens", Metric.formatTokens(store.todayStats?.totalTokens ?? 0))
-                stat("Messages", "\(store.todayStats?.messageCount ?? 0)")
-                stat("Sessions", "\(store.todayStats?.sessionCount ?? 0)")
+            Grid(alignment: .leading, horizontalSpacing: 20, verticalSpacing: 7) {
+                GridRow {
+                    Text("")
+                    Text("Today").font(.caption2).foregroundStyle(.secondary)
+                    Text("All-time").font(.caption2).foregroundStyle(.secondary)
+                }
+                gridStat("Tokens",
+                         Metric.formatTokens(store.todayStats?.totalTokens ?? 0),
+                         Metric.formatTokens(allTimeTokens))
+                gridStat("Messages",
+                         grouped(store.todayStats?.messageCount ?? 0),
+                         grouped(allTimeMessages))
+                gridStat("Sessions",
+                         grouped(store.todayStats?.sessionCount ?? 0),
+                         grouped(allTimeSessions))
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -63,10 +82,12 @@ struct StatsView: View {
         }
     }
 
-    private func stat(_ label: String, _ value: String) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(value).font(.callout.bold().monospacedDigit())
-            Text(label).font(.caption2).foregroundStyle(.secondary)
+    @ViewBuilder
+    private func gridStat(_ label: String, _ today: String, _ all: String) -> some View {
+        GridRow {
+            Text(label).font(.caption).foregroundStyle(.secondary)
+            Text(today).font(.callout.bold().monospacedDigit())
+            Text(all).font(.callout.bold().monospacedDigit())
         }
     }
 
