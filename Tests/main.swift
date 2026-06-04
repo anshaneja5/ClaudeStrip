@@ -47,7 +47,11 @@ check(Metric.summary(from: UsageSnapshot(todayCost: 4.21, todayTokens: 1_200_000
       "$4.21 today  ·  1.2M tok  ·  ⚡ 5h 62% 7d 18%  ·  ▶ $0.84", "summary_full")
 
 check(Metric.summary(from: .empty),
-      "$0.00 today  ·  0 tok  ·  ⚡ 5h — 7d —", "summary_empty_omitsLiveSession")
+      "$0.00 today  ·  0 tok", "summary_empty_omitsLimitsAndLiveSession")
+
+check(Metric.summary(from: UsageSnapshot(todayCost: 1.0, todayTokens: 100,
+      fiveHourPct: 50.0, sevenDayPct: nil, liveSessionCost: nil)),
+      "$1.00 today  ·  100 tok  ·  ⚡ 5h 50% 7d —", "summary_partialLimits_included")
 
 // MARK: - Metric cycling
 

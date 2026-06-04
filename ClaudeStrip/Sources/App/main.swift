@@ -30,8 +30,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         hosting.sizingOptions = .preferredContentSize
         popover.contentViewController = hosting
 
-        // Touch Bar: logo tray item + wide all-metrics strip.
-        strip = ControlStripController()
+        // Touch Bar: logo tray item + wide all-metrics strip (tap = refresh).
+        strip = ControlStripController(onTap: {
+            Task { await ClaudeAnalyticsStore.shared.syncNow() }
+        })
         strip.register()
 
         // Observe the analytics store and rebuild the snapshot on each sync.

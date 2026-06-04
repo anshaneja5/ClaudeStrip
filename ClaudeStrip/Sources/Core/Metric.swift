@@ -30,13 +30,16 @@ public enum Metric: CaseIterable {
 
     /// Everything at once for the wide Touch Bar strip:
     /// "$5.20 today  ·  41.7M tok  ·  ⚡ 5h 8% 7d 3%  ·  ▶ $0.84"
-    /// Live session is omitted when there is none.
+    /// Limits and live session are omitted when there is no data for them
+    /// (no confusing dashes on the strip; the dashboard still shows them).
     public static func summary(from s: UsageSnapshot) -> String {
         var parts = [
             Metric.cost.render(from: s) + " today",
             Metric.tokens.render(from: s),
-            Metric.limits.render(from: s),
         ]
+        if s.fiveHourPct != nil || s.sevenDayPct != nil {
+            parts.append(Metric.limits.render(from: s))
+        }
         if s.liveSessionCost != nil {
             parts.append(Metric.liveSession.render(from: s))
         }

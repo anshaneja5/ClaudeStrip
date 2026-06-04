@@ -3,17 +3,22 @@ import AppKit
 /// Drives the Touch Bar in two parts:
 ///  - a small Claude-logo tray item pinned into the Control Strip (always there)
 ///  - a wide system-modal bar showing ALL metrics at once, taking real width
-/// Tapping the wide strip hides it; tapping the logo tray item brings it back.
-/// Uses the same private APIs as MTMR/Pock. If anything fails, the menubar
-/// dashboard still works.
+/// Tapping the wide strip refreshes the data; the logo tray item shows/hides
+/// the strip. Uses the same private APIs as MTMR/Pock. If anything fails, the
+/// menubar dashboard still works.
 final class ControlStripController: NSObject, NSTouchBarDelegate {
 
     static let trayIdentifier = NSTouchBarItem.Identifier("app.claudestrip.tray")
     static let statsIdentifier = NSTouchBarItem.Identifier("app.claudestrip.stats")
 
+    private let onTap: () -> Void
     private let statsButton = NSButton(title: "—", target: nil, action: nil)
     private var modalBar: NSTouchBar!
     private var isPresented = false
+
+    init(onTap: @escaping () -> Void) {
+        self.onTap = onTap
+    }
 
     func register() {
         NSLog("[ClaudeStrip] register() begin")
@@ -31,9 +36,10 @@ final class ControlStripController: NSObject, NSTouchBarDelegate {
         )
 
         // Wide stats strip: logo + all metrics in one legible line.
+        // Tapping it refreshes the data (it does NOT hide the strip).
         statsButton.bezelStyle = .rounded
         statsButton.target = self
-        statsButton.action = #selector(toggleBar)
+        statsButton.action = #selector(statsTapped)
         statsButton.font = .monospacedDigitSystemFont(ofSize: 16, weight: .semibold)
         statsButton.image = ClaudeLogo.nsImage(size: 18)
         statsButton.imagePosition = .imageLeading
@@ -62,6 +68,10 @@ final class ControlStripController: NSObject, NSTouchBarDelegate {
 
     @objc private func toggleBar() {
         isPresented ? dismissBar() : presentBar()
+    }
+
+    @objc private func statsTapped() {
+        onTap()
     }
 
     private func presentBar() {
