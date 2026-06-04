@@ -40,6 +40,15 @@ check(Metric.liveSession.render(from: UsageSnapshot(todayCost: 0, todayTokens: 0
 
 check(Metric.liveSession.render(from: .empty), "▶ —", "liveSession_missing_showsDash")
 
+// MARK: - Metric.summary (wide Touch Bar strip)
+
+check(Metric.summary(from: UsageSnapshot(todayCost: 4.21, todayTokens: 1_200_000,
+      fiveHourPct: 62.4, sevenDayPct: 18.0, liveSessionCost: 0.84)),
+      "$4.21 today  ·  1.2M tok  ·  ⚡ 5h 62% 7d 18%  ·  ▶ $0.84", "summary_full")
+
+check(Metric.summary(from: .empty),
+      "$0.00 today  ·  0 tok  ·  ⚡ 5h — 7d —", "summary_empty_omitsLiveSession")
+
 // MARK: - Metric cycling
 
 check("\(Metric.cost.next)", "limits", "next_cost")

@@ -9,7 +9,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var strip: ControlStripController!
     private var statusItem: NSStatusItem!
     private var popover: NSPopover!
-    private var metric: Metric = .cost
     private var snapshot: UsageSnapshot = .empty
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -31,8 +30,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         hosting.sizingOptions = .preferredContentSize
         popover.contentViewController = hosting
 
-        // Touch Bar Control Strip item.
-        strip = ControlStripController(onTap: { [weak self] in self?.cycle() })
+        // Touch Bar: logo tray item + wide all-metrics strip.
+        strip = ControlStripController()
         strip.register()
 
         // Observe the analytics store and rebuild the snapshot on each sync.
@@ -67,11 +66,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         render()
     }
 
-    @objc private func cycle() {
-        metric = metric.next
-        render()
-    }
-
     @objc private func togglePopover() {
         guard let button = statusItem.button else { return }
         if popover.isShown {
@@ -83,9 +77,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func render() {
-        let text = metric.render(from: snapshot)
-        strip.updateLabel(text)
-        statusItem.button?.title = text
+        // Wide Touch Bar strip gets everything; menubar shows today's cost.
+        strip.updateLabel(Metric.summary(from: snapshot))
+        statusItem.button?.title = Metric.cost.render(from: snapshot)
     }
 }
 

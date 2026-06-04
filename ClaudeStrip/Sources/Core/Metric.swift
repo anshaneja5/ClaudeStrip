@@ -28,6 +28,21 @@ public enum Metric: CaseIterable {
         return all[(i + 1) % all.count]
     }
 
+    /// Everything at once for the wide Touch Bar strip:
+    /// "$5.20 today  ·  41.7M tok  ·  ⚡ 5h 8% 7d 3%  ·  ▶ $0.84"
+    /// Live session is omitted when there is none.
+    public static func summary(from s: UsageSnapshot) -> String {
+        var parts = [
+            Metric.cost.render(from: s) + " today",
+            Metric.tokens.render(from: s),
+            Metric.limits.render(from: s),
+        ]
+        if s.liveSessionCost != nil {
+            parts.append(Metric.liveSession.render(from: s))
+        }
+        return parts.joined(separator: "  ·  ")
+    }
+
     /// Compact human-readable token count: 1_200_000 -> "1.2M", 1_500 -> "1.5K".
     public static func formatTokens(_ n: Int) -> String {
         if n >= 1_000_000 { return String(format: "%.1fM", Double(n) / 1_000_000) }

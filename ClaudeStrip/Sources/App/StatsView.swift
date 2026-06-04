@@ -39,6 +39,17 @@ struct StatsView: View {
                     .font(.caption2).foregroundStyle(.secondary)
             }
             Spacer()
+            if store.isSyncing {
+                ProgressView().controlSize(.small)
+            } else {
+                Button {
+                    Task { await store.syncNow() }
+                } label: {
+                    Image(systemName: "arrow.clockwise")
+                }
+                .buttonStyle(.borderless)
+                .help("Refresh now")
+            }
         }
     }
 

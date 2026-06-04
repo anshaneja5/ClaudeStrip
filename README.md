@@ -18,10 +18,11 @@ machine. The analytics engine is reused from
 
 A menubar-agent app watches `~/.claude` and parses session `.jsonl` files for
 token usage and cost (with per-model pricing), plus the rolling 5h/7d
-rate-limit snapshots. It pins one item into the Touch Bar Control Strip (via
-private DFR APIs, the same approach Pock uses) so the current metric is always
-visible, with the Claude logo. Tap to cycle metrics. The "active" session is
-the most-recently-modified session file.
+rate-limit snapshots. On the Touch Bar (via the same private APIs MTMR/Pock
+use) it shows a **wide strip with all metrics at once** —
+`$5.20 today · 41.7M tok · ⚡ 5h 8% 7d 3% · ▶ $0.84` — plus a small Claude-logo
+tray item in the Control Strip. Tap the strip to hide it; tap the logo to bring
+it back. The "active" session is the most-recently-modified session file.
 
 Clicking the **menubar item** opens a dashboard popover: today's cost, tokens,
 messages and sessions, color-coded 5h/7d limit bars, and a 7-day cost chart —

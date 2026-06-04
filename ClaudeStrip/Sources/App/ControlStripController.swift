@@ -1,53 +1,78 @@
 import AppKit
 
-/// Owns a single NSCustomTouchBarItem pinned into the Control Strip via private
-/// DFR APIs. Renders a string and reports taps. If registration fails (e.g. no
-/// Touch Bar hardware) the app still functions via the menubar fallback.
-final class ControlStripController {
+/// Drives the Touch Bar in two parts:
+///  - a small Claude-logo tray item pinned into the Control Strip (always there)
+///  - a wide system-modal bar showing ALL metrics at once, taking real width
+/// Tapping the wide strip hides it; tapping the logo tray item brings it back.
+/// Uses the same private APIs as MTMR/Pock. If anything fails, the menubar
+/// dashboard still works.
+final class ControlStripController: NSObject, NSTouchBarDelegate {
 
-    static let identifier = NSTouchBarItem.Identifier("app.claudestrip.usage")
+    static let trayIdentifier = NSTouchBarItem.Identifier("app.claudestrip.tray")
+    static let statsIdentifier = NSTouchBarItem.Identifier("app.claudestrip.stats")
 
-    private let onTap: () -> Void
-    private let button = NSButton(title: "—", target: nil, action: nil)
-    private var item: NSCustomTouchBarItem?
-
-    init(onTap: @escaping () -> Void) {
-        self.onTap = onTap
-    }
+    private let statsButton = NSButton(title: "—", target: nil, action: nil)
+    private var modalBar: NSTouchBar!
+    private var isPresented = false
 
     func register() {
         NSLog("[ClaudeStrip] register() begin")
         DFRSystemModalShowsCloseBoxWhenFrontMost(true)
 
-        button.bezelStyle = .rounded
-        button.target = self
-        button.action = #selector(handleTap)
-        // Large, bold, monospaced digits so it's clearly legible on the strip.
-        button.font = .monospacedDigitSystemFont(ofSize: 24, weight: .semibold)
-        // Claude logo before the text.
-        button.image = ClaudeLogo.nsImage(size: 22)
-        button.imagePosition = .imageLeading
-        button.imageHugsTitle = true
-        button.sizeToFit()
-
-        let newItem = NSCustomTouchBarItem(identifier: ControlStripController.identifier)
-        newItem.view = button
-        self.item = newItem
-
-        NSTouchBarItem.addSystemTrayItem(newItem)
+        // Small always-visible tray item: just the Claude logo, toggles the bar.
+        let trayButton = NSButton(image: ClaudeLogo.nsImage(size: 22),
+                                  target: self, action: #selector(toggleBar))
+        trayButton.bezelStyle = .rounded
+        let tray = NSCustomTouchBarItem(identifier: ControlStripController.trayIdentifier)
+        tray.view = trayButton
+        NSTouchBarItem.addSystemTrayItem(tray)
         DFRElementSetControlStripPresenceForIdentifier(
-            ControlStripController.identifier.rawValue, true
+            ControlStripController.trayIdentifier.rawValue, true
         )
-        NSLog("[ClaudeStrip] register() done — item added to control strip")
+
+        // Wide stats strip: logo + all metrics in one legible line.
+        statsButton.bezelStyle = .rounded
+        statsButton.target = self
+        statsButton.action = #selector(toggleBar)
+        statsButton.font = .monospacedDigitSystemFont(ofSize: 16, weight: .semibold)
+        statsButton.image = ClaudeLogo.nsImage(size: 18)
+        statsButton.imagePosition = .imageLeading
+        statsButton.imageHugsTitle = true
+
+        modalBar = NSTouchBar()
+        modalBar.delegate = self
+        modalBar.defaultItemIdentifiers = [ControlStripController.statsIdentifier]
+
+        presentBar()
+        NSLog("[ClaudeStrip] register() done — tray + wide bar presented")
+    }
+
+    func touchBar(_ touchBar: NSTouchBar,
+                  makeItemForIdentifier identifier: NSTouchBarItem.Identifier) -> NSTouchBarItem? {
+        guard identifier == ControlStripController.statsIdentifier else { return nil }
+        let item = NSCustomTouchBarItem(identifier: ControlStripController.statsIdentifier)
+        item.view = statsButton
+        return item
     }
 
     func updateLabel(_ text: String) {
-        button.title = text
-        // Resize the item to fit the new text so longer metrics aren't clipped.
-        button.sizeToFit()
+        statsButton.title = text
+        statsButton.sizeToFit()
     }
 
-    @objc private func handleTap() {
-        onTap()
+    @objc private func toggleBar() {
+        isPresented ? dismissBar() : presentBar()
+    }
+
+    private func presentBar() {
+        NSTouchBar.presentSystemModalTouchBar(
+            modalBar, systemTrayItemIdentifier: ControlStripController.trayIdentifier
+        )
+        isPresented = true
+    }
+
+    private func dismissBar() {
+        NSTouchBar.dismissSystemModalTouchBar(modalBar)
+        isPresented = false
     }
 }
