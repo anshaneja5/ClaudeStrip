@@ -1,90 +1,134 @@
-# ClaudeStrip
+<p align="center">
+  <img src="assets/logo.png" width="110" alt="ClaudeStrip logo">
+</p>
 
-Claude Code usage, live in your MacBook Pro Touch Bar Control Strip.
+<h1 align="center">ClaudeStrip</h1>
 
-Shows — and cycles on tap — four metrics drawn entirely from your local
-`~/.claude` data:
+<p align="center">
+  <em>Live Claude Code usage on your MacBook Touch Bar — cost, tokens, and rate limits, always one glance away.</em>
+</p>
 
-- 💵 **Today's cost** (`$4.21`)
-- ⚡ **Rate limits** (`⚡ 5h 62% 7d 18%`)
-- 🔢 **Tokens today** (`1.2M tok`)
-- ▶️ **Live session cost** (`▶ $0.84`)
+<p align="center">
+  <a href="https://github.com/anshaneja5/ClaudeStrip/releases"><img src="https://img.shields.io/github/v/release/anshaneja5/ClaudeStrip?color=D97757&label=release" alt="Latest release"></a>
+  <img src="https://img.shields.io/badge/macOS-13%2B-black" alt="macOS 13+">
+  <img src="https://img.shields.io/badge/data-100%25%20local-D97757" alt="100% local">
+</p>
 
-100% local. No hooks, no Claude Code config changes, nothing leaves your
-machine. The analytics engine is reused from
-[Claude-Guardian](https://github.com/anshaneja5/Claude-Guardian).
+---
 
-## How it works
+While you code, your Touch Bar shows everything that matters:
 
-A menubar-agent app watches `~/.claude` and parses session `.jsonl` files for
-token usage and cost (with per-model pricing), plus the rolling 5h/7d
-rate-limit snapshots. On the Touch Bar (via the same private APIs MTMR/Pock
-use) it shows a **wide strip with all metrics at once** —
-`$5.20 today · 41.7M tok · ⚡ 5h 8% 7d 3% · ▶ $0.84` — plus a small Claude-logo
-tray item in the Control Strip. Tap the strip to hide it; tap the logo to bring
-it back. The "active" session is the most-recently-modified session file.
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│  ✳  $5.20 today  ·  41.7M tok  ·  ⚡ 5h 8% 7d 3%  ·  ▶ $0.84    🔆 🔊 │
+└──────────────────────────────────────────────────────────────────────┘
+```
 
-Clicking the **menubar item** opens a dashboard popover: today's cost, tokens,
-messages and sessions, color-coded 5h/7d limit bars, and a 7-day cost chart —
-so you get the full picture without a Touch Bar.
+And the menubar dashboard gives you the full picture on **any** Mac — Touch Bar or not:
+
+| | Today | All-time |
+|---|---|---|
+| **Cost** | $5.20 | $312.40 |
+| **Tokens** | 41.7M | 1.2B |
+| **Messages** | 452 | 38,201 |
+| **Sessions** | 2 | 743 |
+
+…plus color-coded **5h / 7d rate-limit bars** with reset countdowns, and a **7-day cost chart**.
+
+<!-- Drop your screenshots into assets/ and uncomment:
+<p align="center">
+  <img src="assets/dashboard.png" width="380" alt="Menubar dashboard">
+  <img src="assets/touchbar.jpg" width="600" alt="Touch Bar strip">
+</p>
+-->
+
+Everything is parsed from your local `~/.claude` data. **No hooks, no config changes, nothing ever leaves your machine.**
 
 ## Install
-
-### Homebrew
 
 ```bash
 brew install --cask anshaneja5/tap/claudestrip
 ```
 
-> Gatekeeper (unsigned app): if macOS blocks first launch, run
+That's it — the app starts immediately and on every login.
+
+> **Gatekeeper note (unsigned app):** if macOS blocks the first launch, run
 > `xattr -cr /Applications/ClaudeStrip.app` once, then reopen.
 
-### From source
+<details>
+<summary><strong>From source</strong></summary>
 
 ```bash
 git clone https://github.com/anshaneja5/ClaudeStrip.git
 cd ClaudeStrip
-./run-tests.sh     # run unit tests (via swiftc — no SwiftPM needed)
+./run-tests.sh     # unit tests (plain swiftc — no SwiftPM needed)
 ./build-app.sh     # produces build/ClaudeStrip.app
 open build/ClaudeStrip.app
 ```
 
-## Requirements
+Requires Swift 5.9+ (Xcode or Command Line Tools).
+</details>
 
-- macOS 13+ (Ventura or later)
-- A MacBook Pro with a Touch Bar for the Control Strip display (other Macs get
-  the menubar readout only)
-- Swift 5.9+ (Xcode or Command Line Tools) — only needed to build from source
+## Using it
 
-## Uninstall
+| Where | Action | Result |
+|---|---|---|
+| **Touch Bar** — wide strip | Tap | Refresh the numbers now |
+| **Touch Bar** — ✳ logo (Control Strip) | Tap | Show / hide the wide strip |
+| **Menubar** — ✳ + today's cost | Click | Open the dashboard |
+| **Dashboard** — ↻ button | Click | Force a re-sync |
+| **Dashboard** — Quit button | Click | Quit ClaudeStrip |
 
-Homebrew: `brew uninstall --cask claudestrip`
-From source: `./uninstall.sh`
+Data also refreshes automatically ~1.5s after Claude Code writes to `~/.claude`.
 
-## Notes & limitations
+## How it works
 
-- **macOS 26 (Tahoe) Touch Bar bug:** Tahoe ships with a known Apple bug that
-  blanks the Touch Bar (it stays dark while still responding to touch) on both
-  Intel and Apple Silicon Touch Bar Macs. This is **not** caused by ClaudeStrip
-  — no app can draw to a Touch Bar in this state. If your bar is dark, try
-  ` → Restart`, or quit `TouchBarServer` in Activity Monitor and restart.
-  ClaudeStrip's menubar readout still works regardless.
-- **Non–Touch Bar Macs:** the usage still shows in the **menubar**; the Control
-  Strip item simply doesn't appear.
-- Uses **private/undocumented APIs** for the Control Strip — not App Store
-  eligible, and a future macOS could break it. If registration fails, the
-  value still shows in the menubar.
-- Refresh is debounced (~1.5s after Claude writes).
-- "Active session" is inferred from file modification time.
+A tiny menubar agent watches `~/.claude` and parses the session `.jsonl` files
+for token usage, computing cost with per-model pricing (Opus / Sonnet / Haiku),
+plus Claude Code's rolling 5-hour / 7-day rate-limit snapshots. The wide Touch
+Bar strip is presented through the same private macOS APIs that
+[Pock](https://pock.app) and MTMR pioneered. The analytics engine is reused
+from [Claude-Guardian](https://github.com/anshaneja5/Claude-Guardian).
 
-## Development notes
+## FAQ
 
-- **Tests** run via `./run-tests.sh`, which compiles `ClaudeStrip/Sources/Core`
-  plus `Tests/main.swift` with `swiftc` and runs the assertions. This avoids
-  SwiftPM, which is broken in some Command Line Tools installs.
-- The shipped app is built by `./build-app.sh` with `swiftc` directly,
-  importing the private `DFRFoundation` framework via
-  `ClaudeStrip/App/DFR-Bridging-Header.h`.
-- Core logic (`UsageSnapshot`, `Metric`, `ActiveSession`) is Foundation-only
-  and unit-tested; the AppKit layer is verified by running the app.
-```
+**My rate limits show nothing / showed `—`.**
+Your `~/.claude` has no rate-limit snapshot files yet — Claude Code writes them
+during active use. The segment appears in the strip automatically once data
+exists. Check with: `find ~/.claude/projects -name "*-usage-limits" | head`
+
+**My Touch Bar is completely black (but touch still works).**
+That's a known **macOS 26 (Tahoe) bug**, not ClaudeStrip — no app can draw to
+the bar in that state. Try ` → Restart`, or quit `TouchBarServer` in Activity
+Monitor and restart. The menubar dashboard keeps working regardless.
+
+**I don't have a Touch Bar.**
+You still get the menubar dashboard — cost, tokens, limits, and the chart all
+live there. Only the strip itself needs Touch Bar hardware (2016–2020 MacBook
+Pros).
+
+**Is my data sent anywhere?**
+No. ClaudeStrip reads local files and renders them. There is no network code
+in the app.
+
+**Why isn't this on the App Store?**
+The always-visible Touch Bar integration requires private Apple APIs, which the
+App Store doesn't allow. Hence Homebrew.
+
+## Development
+
+- **Core logic** (`UsageSnapshot`, `Metric`, `ActiveSession`) is Foundation-only
+  and unit-tested via `./run-tests.sh` — a plain `swiftc` test runner, so it
+  works even where SwiftPM is broken.
+- **The app** is built by `./build-app.sh` with `swiftc` directly, linking the
+  private `DFRFoundation` framework via `ClaudeStrip/App/DFR-Bridging-Header.h`.
+- **Releasing:** bump the version in `ClaudeStrip/App/Info.plist` +
+  `homebrew/claudestrip.rb`, run `./build-app.sh`, update the cask `sha256`
+  from the new zip, tag `vX.Y.Z`, upload the zip to the GitHub release, and
+  copy the cask into [`anshaneja5/homebrew-tap`](https://github.com/anshaneja5/homebrew-tap).
+
+## Credits
+
+Built in free time as an excuse to finally give the Touch Bar a purpose.
+Analytics engine from [Claude-Guardian](https://github.com/anshaneja5/Claude-Guardian) ·
+Touch Bar technique from the [Pock](https://pock.app) / MTMR lineage.
